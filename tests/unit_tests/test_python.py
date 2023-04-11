@@ -1,6 +1,26 @@
 """Test functionality of Python REPL."""
+import sys
+
+import pytest
 
 from langchain.python import PythonREPL
+from langchain.tools.python.tool import PythonAstREPLTool, PythonREPLTool
+
+_SAMPLE_CODE = """
+```
+def multiply():
+    print(5*6)
+multiply()
+```
+"""
+
+_AST_SAMPLE_CODE = """
+```
+def multiply():
+    return(5*6)
+multiply()
+```
+"""
 
 
 def test_python_repl() -> None:
@@ -41,6 +61,23 @@ def test_functionality() -> None:
     code = "print(1 + 1)"
     output = chain.run(code)
     assert output == "2\n"
+
+
+def test_functionality_multiline() -> None:
+    """Test correct functionality for ChatGPT multiline commands."""
+    chain = PythonREPL()
+    tool = PythonREPLTool(python_repl=chain)
+    output = tool.run(_SAMPLE_CODE)
+    assert output == "30\n"
+
+
+def test_python_ast_repl_multiline() -> None:
+    """Test correct functionality for ChatGPT multiline commands."""
+    if sys.version_info < (3, 9):
+        pytest.skip("Python 3.9+ is required for this test")
+    tool = PythonAstREPLTool()
+    output = tool.run(_AST_SAMPLE_CODE)
+    assert output == 30
 
 
 def test_function() -> None:
